@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>磁磚・大宗物料倉管系統</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f3efe8;--sf:#fffdf9;--tx:#2a2622;--mu:#7a7167;--ln:#ddd3c4;--hd:#f5c9a4;--alt:#fbeadb;--ac:#1f5d63;--ac2:#fff;--wn:#b3382c;--ok:#2d7a4f;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1b19;--sf:#272421;--tx:#ece6dc;--mu:#a39a8e;--ln:#3d3833;--hd:#5a3e29;--alt:#2d2926;--ac:#6cc3c9;--ac2:#10282a;--wn:#ff8b7d;--ok:#6fd09a;color-scheme:dark}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+header{padding:18px 20px 8px;display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between}
+h1{margin:0;font-size:26px;letter-spacing:.04em;font-weight:700}
+.sub{color:var(--mu);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:8px 20px}
+.st{background:var(--sf);border:1px solid var(--ln);padding:10px 14px}
+.st b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.st span{color:var(--mu);font-size:12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 20px;align-items:center}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:1px solid var(--ln);background:var(--sf);color:var(--tx);padding:6px 14px;cursor:pointer;font:inherit}
+.tab[aria-pressed=true]{background:var(--ac);color:var(--ac2);border-color:var(--ac)}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--sf);border:1px solid var(--ln);padding:6px 8px;min-width:0}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--ac);background:var(--ac);color:var(--ac2);padding:6px 14px}
+.btn.g{background:transparent;color:var(--ac)}
+.btn.s{padding:2px 8px;font-size:12px}
+.btn.d{border-color:var(--wn);color:var(--wn);background:transparent}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sp{flex:1}
+.wrap{margin:0 20px 40px;overflow-x:auto;border:1px solid var(--ln);background:var(--sf)}
+table{border-collapse:collapse;width:100%;min-width:1180px}
+th{background:var(--hd);text-align:center;padding:8px 6px;font-weight:600;white-space:nowrap;border:1px solid var(--ln)}
+td{padding:8px 6px;border:1px solid var(--ln);text-align:center;font-variant-numeric:tabular-nums;vertical-align:middle}
+tbody tr:nth-child(even){background:var(--alt)}
+td.n{text-align:right}
+td.nm{font-weight:600;text-align:left}
+.low{color:var(--wn);font-weight:700}
+.zero{color:var(--mu)}
+.bd{height:6px;background:var(--ln);margin-top:4px}.bd i{display:block;height:100%;background:var(--ok)}
+.acts{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+dialog{border:1px solid var(--ln);background:var(--sf);color:var(--tx);padding:0;max-width:560px;width:calc(100% - 24px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dh{padding:12px 16px;background:var(--hd);font-weight:700;display:flex;justify-content:space-between}
+.db{padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.db label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mu)}
+.db .f{grid-column:1/-1}
+.df{padding:10px 16px 14px;display:flex;gap:8px;justify-content:flex-end}
+.hist{grid-column:1/-1;max-height:180px;overflow:auto;border:1px solid var(--ln)}
+.hist table{min-width:0;font-size:13px}
+.empty{padding:40px;text-align:center;color:var(--mu)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:8px 16px;display:none}
+.th{width:44px;height:44px;object-fit:cover;border:1px solid var(--ln);display:block;margin:0 0 4px;cursor:pointer}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;padding:14px 16px;max-height:55vh;overflow:auto}
+.pg figure{margin:0;position:relative}.pg img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--ln);cursor:zoom-in;display:block}
+.pg figure.big{grid-column:1/-1}.pg figure.big img{aspect-ratio:auto;max-height:50vh;object-fit:contain;cursor:zoom-out;background:var(--alt)}
+.pg .x{position:absolute;top:4px;right:4px}
+.up{display:inline-block;cursor:pointer}.up input{display:none}
+.orow{display:flex;gap:8px;align-items:center;margin-top:6px}.orow input{flex:1}
+[hidden]{display:none!important}
+#rkBody tbody tr{background:var(--alt)!important}#rkBody tbody tr.rks{background:var(--sf)!important}
+#rkBody tr.rks td{font-size:12px;color:var(--mu);padding:4px 6px}
+@media(max-width:600px){.db{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>磁磚・大宗物料倉管系統</h1><div class="sub">依「尚海庫存材料單」架構建立：原數量 − 移用 = 剩餘，自動換算面積與金額</div></div>
+  <div class="sub" id="today"></div>
+</header>
+<div class="stats" id="stats"></div>
+<div class="bar">
+  <div class="tabs" id="tabs"></div>
+  <input id="q" type="search" placeholder="搜尋品項／顏色／來源工地" aria-label="搜尋">
+  <select id="catF" aria-label="物料類別"></select>
+  <label class="sub"><input type="checkbox" id="onlyLeft"> 僅顯示有庫存</label>
+  <span class="sp"></span>
+  <button class="btn g" id="xOut">匯出 XLSX</button>
+  <label class="btn g up" style="padding:6px 14px">匯入 XLSX<input type="file" id="xIn" accept=".xlsx,.xls"></label>
+  <button class="btn g" id="optBtn">管理倉別／工地</button>
+  <button class="btn g" id="rkBtn">移用金額排行</button>
+  <button class="btn" id="add">＋ 新增物料</button>
+</div>
+<div class="wrap"><table>
+<thead><tr><th>編號</th><th>品項</th><th>顏色／規格</th><th>寬×長 (cm)</th><th>入數/箱</th><th>箱數(包)</th><th>入庫數量</th><th>來源工地</th><th>單價/單位</th><th>原面積 m²</th><th>移用 m²</th><th>庫存數量</th><th>庫存 m²</th><th>入庫金額</th><th>移用金額</th><th>庫存金額</th><th>移用紀錄</th><th>管理</th></tr></thead>
+<tbody id="rows"></tbody></table><div class="empty" id="empty" hidden>找不到符合的物料，請調整篩選或按「新增物料」。</div></div>
+
+<dialog id="dItem"><form method="dialog" id="fItem">
+  <div class="dh"><span id="tItem">新增物料</span></div>
+  <div class="db">
+    <label>倉別／樓層<select name="floor" data-opt="floors"></select><input name="floor_new" placeholder="輸入新倉別名稱" hidden></label>
+    <label>編號（自動）<input name="no" type="number" readonly style="opacity:.7"></label>
+    <label>物料類別<select name="cat" data-opt="cats"></select><input name="cat_new" placeholder="輸入新類別" hidden></label>
+    <label>基本單位<input name="unit" placeholder="片／包／支／袋／公斤"></label>
+    <label class="f">品項<input name="name" required placeholder="例：山型壁磚／水泥／鋼筋"></label>
+    <label>顏色／規格<input name="color" placeholder="例：四色／#4 鋼筋／42.5級"></label>
+    <label>來源工地<select name="src" data-opt="sites"></select><input name="src_new" placeholder="輸入新工地名稱" hidden></label>
+    <label class="tl">寬 (cm)<input name="w" type="number" step="any"></label>
+    <label class="tl">長 (cm)<input name="l" type="number" step="any"></label>
+    <label>入數／箱(包)<input name="pcs" type="number" min="0" required></label>
+    <label>箱數(包)<input name="boxes" type="number" min="0" required></label>
+    <label>單價／基本單位 (元)<input name="price" type="number" step="any" min="0"></label>
+    <label class="f">備註<input name="note"></label>
+    <div class="f"><div class="sub">照片（按「儲存」後才會生效）</div><div class="pg" id="ePhotos" style="padding:6px 0"></div><label class="btn g up s" style="color:var(--ac);flex-direction:row;font-size:13px">＋ 拍照／選擇照片<input type="file" id="eFile" accept="image/*" multiple></label></div>
+  </div>
+  <div class="df"><button type="button" class="btn d" id="del" hidden>刪除</button><span class="sp"></span><button type="button" class="btn g" data-close>取消</button><button class="btn" value="ok">儲存</button></div>
+</form></dialog>
+
+<dialog id="dMove"><form method="dialog" id="fMove">
+  <div class="dh"><span id="tMove">移用／出庫</span></div>
+  <div class="db">
+    <div class="f sub" id="mInfo"></div>
+    <label>類型<select name="type"><option value="out">移用（出庫）</option><option value="in">補入庫（進貨／退回）</option></select></label>
+    <label>移用日期<input name="date" type="date" required></label>
+    <label>數量<input name="qty" type="number" min="0" step="any" required></label>
+    <label>單位<select name="unit"><option value="box">箱</option><option value="pc">片</option></select></label>
+    <label class="f">移往工地<select name="to" data-opt="sites"></select><input name="to_new" placeholder="輸入新工地名稱" hidden></label>
+    <div class="hist" id="mHist"></div>
+  </div>
+  <div class="df"><button type="button" class="btn g" data-close>關閉</button><button class="btn" value="ok">登錄</button></div>
+</form></dialog>
+<dialog id="dRank" style="max-width:720px">
+  <div class="dh"><span>移用金額排行（工地別）</span></div>
+  <div style="padding:12px 16px 0"><label class="sub">統計依據：<select id="rkBy"><option value="src">來源（不論有無移用）</option><option value="to">移用（移往工地）</option></select></label></div>
+  <div id="rkBody" style="padding:12px 16px;overflow:auto;max-height:60vh"></div>
+  <div class="df"><span class="sub" style="flex:1">來源：依來源工地統計入庫金額；移用：依移往工地統計移用金額（補入庫不計）。</span><button type="button" class="btn g" data-close>關閉</button></div>
+</dialog>
+<dialog id="dOpt">
+  <div class="dh"><span>管理倉別／工地選單</span></div>
+  <div class="db" id="oBody"></div>
+  <div class="df"><span class="sub" style="flex:1">直接修改名稱即可改名，已有物料的資料會一併更新。</span><button type="button" class="btn g" data-close>完成</button></div>
+</dialog>
+<dialog id="dPhoto">
+  <div class="dh"><span id="tPhoto">照片</span></div>
+  <div class="pg" id="pGrid"></div>
+  <div class="df"><label class="btn up">＋ 拍照／選擇照片<input type="file" id="pFile" accept="image/*" multiple></label><span class="sp"></span><button type="button" class="btn g" data-close>關閉</button></div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const KEY="tile-wms-v1";
+const $=s=>document.querySelector(s);
+const seed=()=>[
+ {id:1,floor:"1F",no:1,name:"山型壁磚",color:"四色",w:6,l:22.7,pcs:60,boxes:661,src:"淡海2",price:4,note:"",moves:[]},
+ {id:2,floor:"1F",no:1,name:"平面壁磚",color:"四色",w:6,l:22.7,pcs:80,boxes:325,src:"淡海2",price:3,note:"",moves:[{date:"2026-03-14",to:"五股成州",pc:26000,type:"out"}]},
+ {id:3,floor:"1F",no:1,name:"山型+平磚",color:"四色",w:6,l:22.7,pcs:60,boxes:88,src:"淡海2",price:4,note:"",moves:[]},
+ {id:4,floor:"1F",no:1,name:"山型(混單短)",color:"四色",w:"",l:"",pcs:60,boxes:176,src:"淡海2",price:4,note:"",moves:[]},
+ {id:5,floor:"1F",no:1,name:"山型加工(加工剩料)",color:"四色",w:"",l:"",pcs:178,boxes:440,src:"淡海2",price:0,note:"",moves:[]},
+ {id:6,floor:"1F",no:1,name:"平磚加工(加工剩料)",color:"四色",w:"",l:"",pcs:178,boxes:561,src:"淡海2",price:0,note:"",moves:[]},
+ {id:7,floor:"1F",no:1,name:"加工壁磚(三色混箱)",color:"四色",w:"",l:"",pcs:178,boxes:80,src:"淡海2",price:0,note:"",moves:[]}
+];
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||!S.length)S=seed();
+let floor="全部",editId=null,moveId=null;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const n=v=>Number(v)||0;
+const f0=v=>Math.round(v).toLocaleString("zh-TW");
+const f1=v=>(Math.round(v*10)/10).toLocaleString("zh-TW",{minimumFractionDigits:1});
+function calc(it){
+  const tot=n(it.pcs)*n(it.boxes), sz=n(it.w)*n(it.l)/10000;
+  let out=0,inn=0;
+  it.moves.forEach(m=>m.type==="in"?inn+=m.pc:out+=m.pc);
+  const orig=tot, left=tot-out+inn;
+  return {tot,sz,out,inn,left,aO:tot*sz,aM:out*sz,aL:left*sz,vO:tot*n(it.price),vM:out*n(it.price),vL:left*n(it.price)};
+}
+function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2000)}
+function render(){
+  const floors=["全部",...new Set(S.map(i=>i.floor))];
+  if(!floors.includes(floor))floor="全部";
+  $("#tabs").innerHTML=floors.map(f=>`<button class="tab" aria-pressed="${f===floor}" data-f="${f}">${f}</button>`).join("");
+  const q=$("#q").value.trim().toLowerCase(), only=$("#onlyLeft").checked;
+  const cf0=$("#catF").value;$("#catF").innerHTML='<option value="">全部類別</option>'+O.cats.map(v=>`<option>${esc(v)}</option>`).join("");$("#catF").value=cf0;const cf=$("#catF").value;
+  const list=S.filter(i=>(floor==="全部"||i.floor===floor)&&(!cf||(i.cat||"磁磚")===cf)&&[i.name,i.color,i.src,i.note].join(" ").toLowerCase().includes(q)&&(!only||calc(i).left>0));
+  let tp=0,tl=0,tv=0,tin=0,lowN=0;
+  $("#rows").innerHTML=list.map(i=>{
+    const c=calc(i);tp+=c.tot;tl+=c.left;tv+=c.vL;tin+=c.vO;
+    const pct=c.tot?Math.max(0,Math.min(100,c.left/c.tot*100)):0;
+    if(c.tot&&pct<20)lowN++;
+    const hasA=c.sz>0, dash='<span class="zero">—</span>';
+    const last=i.moves.length?`${i.moves.length} 筆・${i.moves[i.moves.length-1].date.replaceAll("-","/")} ${esc(i.moves[i.moves.length-1].to||"")}`:dash;
+    return `<tr><td>${i.no}</td><td class="nm">${P[i.id]&&P[i.id][0]?`<img class="th" src="${P[i.id][0]}" alt="" data-ph="${i.id}">`:""}${esc(i.name)}<div class="sub">${esc(i.floor)} / ${esc(i.cat||"磁磚")}</div></td><td>${esc(i.color||"")}</td>
+    <td>${hasA?n(i.w)+"×"+n(i.l):dash}</td><td>${n(i.pcs)}</td><td>${f0(n(i.boxes))}</td><td class="n">${f0(c.tot)} <span class="sub">${esc(i.unit||"片")}</span></td><td>${esc(i.src||"")}</td><td>${n(i.price)||dash}</td>
+    <td class="n">${hasA?f1(c.aO):dash}</td><td class="n">${hasA&&c.out?f1(c.aM):dash}</td>
+    <td class="n ${pct<20?"low":""}">${f0(c.left)} <span class="sub">${esc(i.unit||"片")}</span><div class="bd"><i style="width:${pct}%"></i></div></td>
+    <td class="n">${hasA?f1(c.aL):dash}</td><td class="n">${c.vO?f0(c.vO):dash}</td><td class="n">${c.vM?f0(c.vM):dash}</td><td class="n">${c.vL?f0(c.vL):dash}</td>
+    <td class="sub">${last}</td>
+    <td><div class="acts"><button class="btn s" data-mv="${i.id}">移用</button><button class="btn s g" data-ph="${i.id}">照片${P[i.id]&&P[i.id].length?"("+P[i.id].length+")":""}</button><button class="btn s g" data-ed="${i.id}">編輯</button></div></td></tr>`}).join("");
+  $("#empty").hidden=list.length>0;
+  $("#stats").innerHTML=[["物料品項",list.length],["入庫數量",f0(tp)],["入庫金額(元)",f0(tin)],["庫存數量",f0(tl)],["庫存金額(元)",f0(tv)],["消化庫存金額(元)",f0(tin-tv)],["庫存去化率%",tin?(Math.round((tin-tv)/tin*1000)/10)+"%":"—"]].map(([a,b])=>`<div class="st"><b>${b}</b><span>${a}</span></div>`).join("");
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function openItem(id){
+  editId=id;const f=$("#fItem"),it=S.find(x=>x.id===id)||{floor:floor==="全部"?"1F":floor,no:nextNo()};
+  $("#tItem").textContent=id?"編輯物料":"新增物料";$("#del").hidden=!id;
+  ["floor","no","name","color","src","w","l","pcs","boxes","price","note","unit"].forEach(k=>f.elements[k].value=it[k]??"");
+  fillOpts(f,it);if(!f.elements.unit.value&&(it.cat||"磁磚")==="磁磚")f.elements.unit.value="片";catUI();pend=[...(P[id]||[])];drawE();$("#dItem").showModal();
+}
+$("#fItem").addEventListener("submit",e=>{
+  if(e.submitter&&e.submitter.value!=="ok")return;
+  const f=e.target.elements,d={};
+  ["floor","no","name","color","src","w","l","pcs","boxes","price","note","cat","unit"].forEach(k=>d[k]=f[k].value.trim());
+  for(const [k,ok,inp] of [["floor","floors","floor_new"],["src","sites","src_new"],["cat","cats","cat_new"]]){
+    if(d[k]==="__new"){const v=f[inp].value.trim();if(!v&&k!=="src"){e.preventDefault();toast("請輸入名稱");return}d[k]=v;if(v&&!O[ok].includes(v)){O[ok].push(v);saveO()}}
+  }
+  if(d.cat!=="磁磚"){d.w="";d.l=""}
+  let tid=editId;
+  if(editId){Object.assign(S.find(x=>x.id===editId),d)}else{tid=Date.now();d.no=nextNo();S.push({id:tid,moves:[],...d})}
+  P[tid]=pend.slice();putPhotos(tid);
+  save();render();toast("已儲存");
+});
+$("#del").onclick=()=>{if(editId&&confirm("確定刪除此物料與其移用紀錄、照片？")){delPhotos(editId);S=S.filter(x=>x.id!==editId);save();$("#dItem").close();render();toast("已刪除")}};
+function openMove(id){
+  moveId=id;const it=S.find(x=>x.id===id),c=calc(it);
+  $("#tMove").textContent="移用／出庫："+it.name;
+  {const u=$("#fMove").elements.unit;u.options[0].textContent="箱／包裝";u.options[1].textContent=it.unit||"片"}
+  $("#mInfo").textContent=`目前庫存 ${f0(c.left)} ${it.unit||"片"}（約 ${f0(c.left/Math.max(1,n(it.pcs)))} 箱）${c.sz?`・${f1(c.aL)} m²`:""}`;
+  $("#fMove").elements.date.value=new Date().toISOString().slice(0,10);
+  $("#fMove").elements.qty.value="";
+  $("#mHist").innerHTML=it.moves.length?`<table><thead><tr><th>移用日期</th><th>類型</th><th>片數</th><th>去向</th><th></th></tr></thead><tbody>${it.moves.map((m,k)=>`<tr><td>${m.date}</td><td>${m.type==="in"?"入庫":"移用"}</td><td>${f0(m.pc)}</td><td>${esc(m.to||"")}</td><td><button type="button" class="btn s d" data-rm="${k}">撤銷</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty" style="padding:14px">尚無移用紀錄</div>';
+  {const sel=$("#fMove").elements.to;sel.innerHTML='<option value="">（未指定）</option>'+optList("sites").map(v=>`<option>${esc(v)}</option>`).join("")+'<option value="__new">＋ 自訂新增…</option>';sel.value="";toggleNew(sel)}
+  $("#dMove").showModal();
+}
+$("#fMove").addEventListener("submit",e=>{
+  if(e.submitter&&e.submitter.value!=="ok")return;
+  const f=e.target.elements,it=S.find(x=>x.id===moveId);
+  let pc=n(f.qty.value)*(f.unit.value==="box"?n(it.pcs):1);
+  if(f.type.value==="out"&&pc>calc(it).left){e.preventDefault();toast("移用數量超過剩餘庫存");return}
+  let to=f.to.value;
+  if(to==="__new"){to=f.to_new.value.trim();if(!to){e.preventDefault();toast("請輸入工地名稱");return}if(!O.sites.includes(to)){O.sites.push(to);saveO()}}
+  it.moves.push({date:f.date.value,to,pc,type:f.type.value});
+  save();render();toast("已登錄");
+});
+$("#mHist").addEventListener("click",e=>{const k=e.target.dataset.rm;if(k==null)return;const it=S.find(x=>x.id===moveId);it.moves.splice(+k,1);save();render();openMove(moveId)});
+document.addEventListener("click",e=>{
+  const t=e.target;
+  if(t.dataset.f){floor=t.dataset.f;render()}
+  if(t.dataset.ed)openItem(+t.dataset.ed);
+  if(t.dataset.mv)openMove(+t.dataset.mv);
+  if(t.dataset.ph)openPhoto(+t.dataset.ph);
+  if(t.dataset.od){const [k,j]=t.dataset.od.split(":"),v=O[k][+j],c=useCount(k,v);
+    if(k==="cats"&&v==="磁磚"){toast("「磁磚」為內建類別，無法刪除");return}
+    if(c&&!t.dataset.arm){t.dataset.arm="1";t.textContent=`${c} 項物料將改為${k==="floors"?"「未分類」":k==="cats"?"「其他」":"未指定"}，再按一次刪除`;setTimeout(()=>{if(t.isConnected){delete t.dataset.arm;t.textContent="刪除"}},4000);return}
+    S.forEach(i=>{if(k==="cats"&&(i.cat||"磁磚")===v)i.cat="其他";if(k==="floors"&&i.floor===v)i.floor="未分類";if(k==="sites"&&i.src===v)i.src=""});
+    O[k].splice(+j,1);if(c&&k==="cats"&&!O.cats.includes("其他"))O.cats.push("其他");if(c&&k==="floors"&&!O.floors.includes("未分類"))O.floors.push("未分類");
+    saveO();save();render();drawO();toast("已刪除")}
+  if(t.dataset.oa){const inp=t.parentNode.querySelector("input"),v=inp.value.trim(),k=t.dataset.oa;if(v&&!O[k].includes(v)){O[k].push(v);saveO();drawO()}else toast(v?"此名稱已存在":"請輸入名稱")}
+  if(t.dataset.ex!=null){pend.splice(+t.dataset.ex,1);drawE()}
+  if(t.dataset.px!=null){const a=P[phId];a.splice(+t.dataset.px,1);putPhotos(phId);drawPhotos();render()}
+  if(t.dataset.pz!=null)t.closest("figure").classList.toggle("big");
+  if(t.hasAttribute&&t.hasAttribute("data-close"))t.closest("dialog").close();
+});
+$("#add").onclick=()=>openItem(null);
+$("#q").oninput=render;$("#onlyLeft").onchange=render;$("#catF").onchange=render;
+let DL=null;
+async function getDL(){
+  if(DL)return DL;
+  for(let k=0;k<20&&!window.claude;k++)await new Promise(r=>setTimeout(r,150));
+  try{DL=window.claude?await claude.use("downloads"):null}catch(e){DL=null}
+  return DL;
+}
+async function saveFile(name,blob){
+  const d=await getDL();
+  if(d){await d.save({filename:name,data:blob});return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+function loadScript(u){return new Promise(r=>{const s=document.createElement("script");s.src=u;s.onload=()=>r(true);s.onerror=()=>r(false);document.head.appendChild(s)})}
+async function ensureX(){
+  if(window.XLSX)return true;
+  await loadScript("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");
+  return !!window.XLSX;
+}
+const MH=["倉別","品項","顏色／規格","來源工地","日期","類型","移往工地","數量(基本單位)"];
+$("#xOut").onclick=async()=>{
+  if(!(await ensureX())){toast("XLSX 元件載入失敗，請檢查網路後重試");return}
+  const a=S.map(i=>{const c=calc(i);return {"倉別":i.floor,"類別":i.cat||"磁磚","單位":i.unit||"片","編號":i.no,"品項":i.name,"顏色／規格":i.color||"","寬(cm)":n(i.w)||"","長(cm)":n(i.l)||"","入數／箱(包)":n(i.pcs),"箱數(包)":n(i.boxes),"來源工地":i.src||"","單價":n(i.price),"備註":i.note||"","入庫數量":c.tot,"入庫金額":c.vO,"移用數量":c.out,"庫存數量":c.left,"庫存金額":c.vL,"消化庫存金額":c.vO-c.vL,"庫存去化率%":c.vO?Math.round((c.vO-c.vL)/c.vO*1000)/10:""}});
+  const b=S.flatMap(i=>i.moves.map(m=>({"倉別":i.floor,"品項":i.name,"顏色／規格":i.color||"","來源工地":i.src||"","日期":m.date||"","類型":m.type==="in"?"補入庫":"移用","移往工地":m.to||"","數量(基本單位)":m.pc})));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(a),"庫存");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(b,{header:MH}),"移用紀錄");
+  try{const out=XLSX.write(wb,{bookType:"xlsx",type:"array"});await saveFile("庫存材料單.xlsx",new Blob([out]));toast("已匯出")}catch(e){if(!e||e.code!=="declined")toast("匯出失敗："+((e&&(e.code||e.message))||""))}
+};
+$("#xIn").onchange=async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  if(!(await ensureX())){toast("XLSX 元件載入失敗，請檢查網路後重試");return}
+  try{
+    const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets["庫存"]||wb.Sheets[wb.SheetNames[0]],{defval:""});
+    const mvS=wb.Sheets["移用紀錄"],mv=mvS?XLSX.utils.sheet_to_json(mvS,{defval:""}):null;
+    const s=v=>String(v??"").trim(),key=(fl,nm,c,sr)=>[fl,nm,c,sr].map(s).join("|");
+    const dt=v=>{if(typeof v==="number"){const p=XLSX.SSF.parse_date_code(v);return p?`${p.y}-${String(p.m).padStart(2,"0")}-${String(p.d).padStart(2,"0")}`:""}return s(v).replaceAll("/","-")};
+    let add=0,upd=0,seen=[];
+    rows.forEach(r=>{
+      const nm=s(r["品項"]);if(!nm)return;
+      const d={floor:s(r["倉別"])||"1F",cat:s(r["類別"])||"磁磚",unit:s(r["單位"]),name:nm,color:s(r["顏色／規格"]),w:s(r["寬(cm)"]),l:s(r["長(cm)"]),pcs:n(r["入數／箱(包)"]),boxes:n(r["箱數(包)"]),src:s(r["來源工地"]),price:n(r["單價"]),note:s(r["備註"])};
+      if(d.cat!=="磁磚"){d.w="";d.l=""}
+      const k=key(d.floor,d.name,d.color,d.src);let it=S.find(x=>key(x.floor,x.name,x.color,x.src)===k);
+      if(it){Object.assign(it,d);upd++}else{it={id:Date.now()+add,no:nextNo(),moves:[],...d};S.push(it);add++}
+      seen.push([k,it]);
+    });
+    if(mv)seen.forEach(([k,it])=>{it.moves=mv.filter(m=>key(m["倉別"],m["品項"],m["顏色／規格"],m["來源工地"])===k).map(m=>({date:dt(m["日期"]),to:s(m["移往工地"]),pc:n(m["數量(基本單位)"]),type:s(m["類型"])==="補入庫"?"in":"out"}))});
+    syncO();save();render();toast(`匯入完成：新增 ${add} 筆、更新 ${upd} 筆`);
+  }catch(x){toast("匯入失敗："+((x&&x.message)||"請確認檔案格式"))}
+};
+$("#today").textContent=new Date().toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric"});
+let P={},db0=null,phId=null;
+function idb(){return new Promise(r=>{try{const q=indexedDB.open("tile-wms-photos",1);q.onupgradeneeded=()=>q.result.createObjectStore("p");q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})}
+async function loadPhotos(){db0=await idb();if(!db0)return;await new Promise(r=>{try{const q=db0.transaction("p").objectStore("p").openCursor();q.onsuccess=()=>{const c=q.result;if(c){P[c.key]=c.value;c.continue()}else r()};q.onerror=()=>r()}catch(e){r()}})}
+function putPhotos(id){if(!db0)return;try{const s=db0.transaction("p","readwrite").objectStore("p");if(P[id]&&P[id].length)s.put(P[id],id);else s.delete(id)}catch(e){}}
+function delPhotos(id){delete P[id];putPhotos(id)}
+function shrink(file){return new Promise((res,rej)=>{const im=new Image(),u=URL.createObjectURL(file);im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL("image/jpeg",.75))};im.onerror=()=>rej(new Error("bad"));im.src=u})}
+function drawPhotos(){const a=P[phId]||[];$("#pGrid").innerHTML=a.length?a.map((s,k)=>`<figure><img src="${s}" alt="物料照片" data-pz="${k}"><button type="button" class="btn s d x" data-px="${k}">刪除</button></figure>`).join(""):'<div class="empty f" style="grid-column:1/-1;padding:20px">尚無照片，按下方按鈕拍照或從相簿選取。</div>'}
+function openPhoto(id){phId=id;$("#tPhoto").textContent="照片："+S.find(x=>x.id===id).name;drawPhotos();$("#dPhoto").showModal()}
+$("#pFile").onchange=async e=>{
+  const fs=[...e.target.files];e.target.value="";if(!fs.length)return;
+  P[phId]=P[phId]||[];let ok=0;
+  for(const f of fs){try{P[phId].push(await shrink(f));ok++}catch(x){}}
+  putPhotos(phId);drawPhotos();render();toast(ok?`已新增 ${ok} 張照片`:"無法讀取此圖片");
+  if(!db0)toast("此瀏覽器無法永久儲存照片，關閉頁面後會消失");
+};
+let O=null;try{O=JSON.parse(localStorage.getItem("tile-wms-opts"))}catch(e){}
+O=O||{floors:["1F","2F","3F","B1"],sites:[]};
+if(!O.cats)O.cats=["磁磚","水泥砂石","鋼筋鐵件","管材","五金","其他"];
+function saveO(){try{localStorage.setItem("tile-wms-opts",JSON.stringify(O))}catch(e){}}
+function optList(k){return O[k]}
+function nextNo(){return S.reduce((m,i)=>Math.max(m,n(i.no)),0)+1}
+if(new Set(S.map(i=>n(i.no))).size<S.length||S.some(i=>!n(i.no))){S.forEach((i,k)=>i.no=k+1);save()}
+function catUI(){const c=$("#fItem").elements.cat.value;document.querySelectorAll("#fItem .tl").forEach(e=>e.hidden=c!=="磁磚")}
+function syncO(){S.forEach(i=>{if(i.floor&&!O.floors.includes(i.floor))O.floors.push(i.floor);if(i.cat&&!O.cats.includes(i.cat))O.cats.push(i.cat);if(i.src&&!O.sites.includes(i.src))O.sites.push(i.src);i.moves.forEach(m=>{if(m.to&&!O.sites.includes(m.to))O.sites.push(m.to)})});saveO()}
+function useCount(k,v){return S.filter(i=>(k==="floors"?i.floor:k==="cats"?(i.cat||"磁磚"):i.src)===v).length}
+function drawO(){
+  $("#oBody").innerHTML=[["floors","倉別／樓層"],["sites","來源工地"],["cats","物料類別"]].map(([k,t])=>`<div class="f"><div class="sub">${t}</div>${O[k].map((v,j)=>`<div class="orow"><input value="${esc(v)}" data-on="${k}" data-oi="${j}" aria-label="${t}名稱"><span class="sub">${useCount(k,v)} 項使用</span><button type="button" class="btn s d" data-od="${k}:${j}">刪除</button></div>`).join("")}<div class="orow"><input placeholder="新增${t}" data-onew="${k}"><button type="button" class="btn s" data-oa="${k}">新增</button></div></div>`).join("");
+}
+syncO();
+$("#optBtn").onclick=()=>{drawO();$("#dOpt").showModal()};
+function drawRankSrc(){
+  const m={};
+  S.forEach(i=>{const c=calc(i),key=i.src||"（未指定）",r=m[key]=m[key]||{v:0,l:0,o:0,pc:0,a:0,c:0};
+    r.v+=c.vO;r.l+=c.vL;r.o+=c.vM;r.pc+=c.tot;r.a+=c.aO;r.c++});
+  const rows=Object.entries(m).sort((a,b)=>b[1].v-a[1].v||b[1].pc-a[1].pc),sum=k=>rows.reduce((s,[,r])=>s+r[k],0),tot=sum("v"),mx=rows.length?rows[0][1].v:0;
+  $("#rkBody").innerHTML=rows.length?`<table style="min-width:0"><thead><tr><th>名次</th><th>來源工地</th><th>入庫金額</th><th>佔比</th><th>庫存金額</th><th>移用金額</th><th>總片數</th><th>原面積 m²</th><th>品項</th></tr></thead><tbody>${rows.map(([k,r],j)=>`<tr><td>${j+1}</td><td class="nm">${esc(k)}</td><td class="n" style="min-width:120px">${f0(r.v)}<div class="bd"><i style="width:${mx?r.v/mx*100:0}%"></i></div></td><td class="n">${tot?Math.round(r.v/tot*100):0}%</td><td class="n">${f0(r.l)}</td><td class="n">${r.o?f0(r.o):"—"}</td><td class="n">${f0(r.pc)}</td><td class="n">${r.a?f1(r.a):"—"}</td><td>${r.c}</td></tr>`).join("")}</tbody><tfoot><tr><th colspan="2">合計</th><th class="n">${f0(tot)}</th><th></th><th class="n">${f0(sum("l"))}</th><th class="n">${f0(sum("o"))}</th><th class="n">${f0(sum("pc"))}</th><th class="n">${f1(sum("a"))}</th><th>${sum("c")}</th></tr></tfoot></table>`:'<div class="empty">尚無物料資料</div>';
+}
+function drawRank(){
+  if($("#rkBy").value==="src")return drawRankSrc();
+  const by=$("#rkBy").value,m={};
+  S.forEach(i=>{const p=n(i.price),sz=n(i.w)*n(i.l)/10000;i.moves.forEach(v=>{
+    if(v.type==="in")return;
+    const key=(by==="to"?v.to:i.src)||"（未填寫）";
+    const r=m[key]=m[key]||{pc:0,a:0,v:0,c:0,d:[]};r.pc+=v.pc;r.a+=v.pc*sz;r.v+=v.pc*p;r.c++;r.d.push({date:v.date||"",name:i.name,unit:i.unit||"片",pc:v.pc,a:v.pc*sz,v:v.pc*p});
+  })});
+  const rows=Object.entries(m).sort((a,b)=>b[1].v-a[1].v||b[1].pc-a[1].pc),tot=rows.reduce((s,[,r])=>s+r.v,0),mx=rows.length?rows[0][1].v:0;
+  $("#rkBody").innerHTML=rows.length?`<table style="min-width:0"><thead><tr><th>名次</th><th>工地</th><th>移用金額</th><th>佔比</th><th>移用片數</th><th>移用 m²</th><th>筆數</th></tr></thead><tbody>${rows.map(([k,r],j)=>`<tr><td>${j+1}</td><td class="nm">${esc(k)}</td><td class="n" style="min-width:120px">${f0(r.v)}<div class="bd"><i style="width:${mx?r.v/mx*100:0}%"></i></div></td><td class="n">${tot?Math.round(r.v/tot*100):0}%</td><td class="n">${f0(r.pc)}</td><td class="n">${r.a?f1(r.a):"—"}</td><td>${r.c}</td></tr>${(r.d||[]).sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<tr class="rks"><td></td><td style="text-align:left;padding-left:16px">└ ${esc(x.date.replaceAll("-","/"))}　${esc(x.name)}</td><td class="n">${f0(x.v)}</td><td></td><td class="n">${f0(x.pc)} ${esc(x.unit)}</td><td class="n">${x.a?f1(x.a):"—"}</td><td></td></tr>`).join("")}`).join("")}</tbody><tfoot><tr><th colspan="2">合計</th><th class="n">${f0(tot)}</th><th></th><th class="n">${f0(rows.reduce((s,[,r])=>s+r.pc,0))}</th><th class="n">${f1(rows.reduce((s,[,r])=>s+r.a,0))}</th><th>${rows.reduce((s,[,r])=>s+r.c,0)}</th></tr></tfoot></table>`:'<div class="empty">尚無移用紀錄，在表格按「移用」登錄後就會出現排行。</div>';
+}
+$("#rkBtn").onclick=()=>{drawRank();$("#dRank").showModal()};
+$("#rkBy").onchange=drawRank;
+function toggleNew(sel){const inp=sel.parentNode.querySelector("input");inp.hidden=sel.value!=="__new";if(!inp.hidden)inp.focus()}
+function fillOpts(f,it){
+  ["floors","sites","cats"].forEach(k=>{
+    const sel=f.querySelector(`[data-opt=${k}]`),cur=k==="floors"?it.floor:k==="cats"?(it.cat||"磁磚"):it.src,l=optList(k);
+    if(cur&&!l.includes(cur))l.push(cur);
+    sel.innerHTML=(k==="sites"?'<option value="">（未指定）</option>':"")+l.map(v=>`<option>${esc(v)}</option>`).join("")+'<option value="__new">＋ 自訂新增…</option>';
+    sel.value=cur||(k==="sites"?"":l[0]);
+    toggleNew(sel);
+  });
+}
+document.addEventListener("change",e=>{
+  const t=e.target;if(!t.dataset)return;
+  if(t.dataset.opt){toggleNew(t);if(t.dataset.opt==="cats"){catUI();const u=$("#fItem").elements.unit;if(!u.value&&t.value==="磁磚")u.value="片"}}
+  if(t.dataset.oi!=null){
+    const k=t.dataset.on,j=+t.dataset.oi,old=O[k][j],v=t.value.trim();
+    if(k==="cats"&&old==="磁磚"){toast("「磁磚」為內建類別，無法改名");t.value=old;return}
+    if(!v||(v!==old&&O[k].includes(v))){toast("名稱不可空白或重複");t.value=old;return}
+    S.forEach(i=>{if(k==="cats"&&(i.cat||"磁磚")===old)i.cat=v;if(k==="floors"&&i.floor===old)i.floor=v;if(k==="sites"&&i.src===old)i.src=v;i.moves.forEach(m=>{if(k==="sites"&&m.to===old)m.to=v})});
+    O[k][j]=v;saveO();save();render();drawO();
+  }
+});
+let pend=[];
+function drawE(){$("#ePhotos").innerHTML=pend.map((s,k)=>`<figure><img src="${s}" alt="物料照片" data-pz="${k}"><button type="button" class="btn s d x" data-ex="${k}">刪除</button></figure>`).join("")}
+$("#eFile").onchange=async e=>{
+  const fs=[...e.target.files];e.target.value="";let ok=0;
+  for(const f of fs){try{pend.push(await shrink(f));ok++}catch(x){}}
+  drawE();toast(ok?`已加入 ${ok} 張，記得按「儲存」`:"無法讀取此圖片");
+};
+render();
+loadPhotos().then(render);
+</script>
+</body>
+</html>
